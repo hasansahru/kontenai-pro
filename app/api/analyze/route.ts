@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { YoutubeTranscript } from 'youtube-transcript'
 
 const DEFAULT_9ROUTER_KEY = 'sk-359ef6f88ed2d372-wi3lmm-fce3c847'
 const DEFAULT_9ROUTER_ENDPOINT = 'https://ai.sahru.my.id/v1/chat/completions'
@@ -345,6 +346,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'URL atau Transkrip wajib diisi' }, { status: 400 })
     }
 
+    let finalUserMessage = userMessage
+
+    // Extractor helper: Extract YouTube video ID & transcript automatically if URL provided
+    if (url && !userMessage?.includes('TRANSKRIP MANUAL')) {
+      try {
+        const transcriptItems = await YoutubeTranscript.fetchTranscript(url, { lang: 'id' }).catch(() =>
+          YoutubeTranscript.fetchTranscript(url, { lang: 'en' }).catch(() =>
+            YoutubeTranscript.fetchTranscript(url)
+          )
+        )
+
+        if (transcriptItems && transcriptItems.length > 0) {
+          const fullText = transcriptItems.map((item) => item.text).join(' ')
+          finalUserMessage = `Analisis konten YouTube berikut (Transkrip berhasil diekstrak otomatis):
+
+URL: ${url}
+Transkrip Video:
+---
+${fullText}
+---
+
+Platform: YOUTUBE
+${notes ? `Catatan khusus: ${notes}` : ''}
+${keyword ? `Kata kunci target: ${keyword}` : ''}
+
+${channel?.analyticsData ? `\n\n${channel.analyticsData}\n\n` : ''}Hasilkan paket konten lengkap dalam format JSON.`
+        }
+      } catch (trErr) {
+        console.warn('Auto transcript extraction failed or not available for URL:', url, trErr)
+      }
+    }
+
     // ----------------------------------------------------
     // Provider 1: Google AI Studio Direct
     // ----------------------------------------------------
@@ -359,7 +392,7 @@ export async function POST(req: NextRequest) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: systemPrompt }] },
-          contents: [{ parts: [{ text: userMessage }] }],
+          contents: [{ parts: [{ text: finalUserMessage }] }],
           generationConfig: {
             responseMimeType: 'application/json',
             temperature: 0.7,
@@ -412,7 +445,7 @@ export async function POST(req: NextRequest) {
             model: currentModel,
             messages: [
               { role: 'system', content: systemPrompt },
-              { role: 'user', content: userMessage },
+              { role: 'user', content: finalUserMessage },
             ],
             temperature: 0.7,
             max_tokens: 4096,
