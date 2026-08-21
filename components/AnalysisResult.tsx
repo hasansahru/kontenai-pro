@@ -431,30 +431,89 @@ export default function AnalysisResultPanel({ analysis }: { analysis: AnalysisRe
                 </div>
               </Section>
             )}
-            <Section title="Keywords & Hashtags">
+            <Section title="Optimasi SEO & Keyword YouTube">
               <Card className="space-y-6">
+                {/* Kata Kunci Utama */}
                 <div>
                   <div className="flex justify-between items-center mb-3">
-                    <strong className="text-xs font-bold uppercase tracking-wider text-slate-500">Keywords Utama</strong>
+                    <div>
+                      <strong className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Kata Kunci Utama (Primary Keywords)</strong>
+                    </div>
                     <CopyButton text={Array.isArray(currentData?.seo?.keyword_utama) ? currentData.seo.keyword_utama.join(', ') : (currentData?.seo?.keyword_utama || 'strategi konten, tips youtube, viral hook')} />
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {Array.isArray(currentData?.seo?.keyword_utama)
-                      ? currentData.seo.keyword_utama.map((k: string, i: number) => <span key={i} className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 px-2.5 py-1 rounded-md text-xs font-medium">{k}</span>)
-                      : <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 px-2.5 py-1 rounded-md text-xs font-medium">{currentData?.seo?.keyword_utama || 'strategi konten'}</span>}
+                      ? currentData.seo.keyword_utama.map((k: string, i: number) => <span key={i} className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700/50 px-2.5 py-1 rounded-md text-xs font-semibold">{k}</span>)
+                      : <span className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700/50 px-2.5 py-1 rounded-md text-xs font-semibold">{currentData?.seo?.keyword_utama || 'strategi konten'}</span>}
                   </div>
                 </div>
+
+                {/* Kata Kunci Turunan */}
+                {currentData?.seo?.keyword_turunan && (
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <div>
+                        <strong className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Kata Kunci Turunan (Long-Tail Keywords)</strong>
+                      </div>
+                      <CopyButton text={Array.isArray(currentData.seo.keyword_turunan) ? currentData.seo.keyword_turunan.join(', ') : currentData.seo.keyword_turunan} />
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {Array.isArray(currentData.seo.keyword_turunan)
+                        ? currentData.seo.keyword_turunan.map((k: string, i: number) => <span key={i} className="bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 px-2.5 py-1 rounded-md text-xs font-medium">{k}</span>)
+                        : <span className="bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 px-2.5 py-1 rounded-md text-xs font-medium">{currentData.seo.keyword_turunan}</span>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tags YouTube (CSV) */}
                 <div>
                   <div className="flex justify-between items-center mb-3">
-                    <strong className="text-xs font-bold uppercase tracking-wider text-slate-500">Hashtags</strong>
+                    <div>
+                      <strong className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Tags YouTube</strong>
+                      <span className="ml-2 text-[11px] text-slate-500 font-normal">(Format Tag CSV untuk YouTube Studio)</span>
+                    </div>
+                    <CopyButton text={
+                      Array.isArray(currentData?.seo?.tags)
+                        ? currentData.seo.tags.join(', ')
+                        : (Array.isArray(currentData?.seo?.keyword_utama)
+                          ? [...currentData.seo.keyword_utama, ...(Array.isArray(currentData?.seo?.keyword_turunan) ? currentData.seo.keyword_turunan : [])].join(', ')
+                          : 'strategi konten, tips youtube, viral hook')
+                    } />
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(Array.isArray(currentData?.seo?.tags) ? currentData.seo.tags : (Array.isArray(currentData?.seo?.keyword_utama) ? currentData.seo.keyword_utama : ['strategi konten', 'tips youtube'])).map((t: string, i: number) => (
+                      <span key={i} className="bg-blue-50 text-blue-800 dark:bg-blue-900/20 border border-dashed border-blue-300 dark:border-blue-700/50 px-2 py-0.5 rounded text-xs font-mono">{t}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Hashtags */}
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <strong className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Hashtags YouTube</strong>
                     <CopyButton text={Array.isArray(currentData?.seo?.hashtags) ? currentData.seo.hashtags.join(' ') : (currentData?.seo?.hashtags || '#KontenAI #Creator #Viral')} />
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {Array.isArray(currentData?.seo?.hashtags)
-                      ? currentData.seo.hashtags.map((k: string, i: number) => <span key={i} className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-md text-xs font-medium">{k}</span>)
-                      : <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-md text-xs font-medium">{currentData?.seo?.hashtags || '#KontenAI'}</span>}
+                      ? currentData.seo.hashtags.map((k: string, i: number) => <span key={i} className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 px-2.5 py-1 rounded-md text-xs font-medium">{k.startsWith('#') ? k : `#${k}`}</span>)
+                      : <span className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 px-2.5 py-1 rounded-md text-xs font-medium">{currentData?.seo?.hashtags || '#KontenAI'}</span>}
                   </div>
                 </div>
+
+                {/* Rekomendasi Playlist */}
+                {currentData?.seo?.playlist_recommendation && (
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <strong className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Rekomendasi Playlist YouTube</strong>
+                      <CopyButton text={Array.isArray(currentData.seo.playlist_recommendation) ? currentData.seo.playlist_recommendation.join(', ') : currentData.seo.playlist_recommendation} />
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {Array.isArray(currentData.seo.playlist_recommendation)
+                        ? currentData.seo.playlist_recommendation.map((pl: string, i: number) => <span key={i} className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700/50 px-2.5 py-1 rounded-md text-xs font-semibold">{pl}</span>)
+                        : <span className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700/50 px-2.5 py-1 rounded-md text-xs font-semibold">{currentData.seo.playlist_recommendation}</span>}
+                    </div>
+                  </div>
+                )}
               </Card>
             </Section>
           </div>
