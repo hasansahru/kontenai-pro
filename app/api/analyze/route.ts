@@ -299,22 +299,80 @@ function normalizeAnalysisResult(raw: any): any {
     normalized.video_panjang = vp
   }
 
-  // Also normalize shots Array upload recommendation if present
+  // Normalize shots Array specifically for YouTube Shorts data isolation
   if (Array.isArray(normalized.shots)) {
-    normalized.shots = normalized.shots.map((shot: any) => {
-      if (!shot.rekomendasi_upload) {
-        return {
-          ...shot,
-          rekomendasi_upload: {
-            tersedia: true,
-            hari_terbaik: ['Setiap Hari'],
-            jam_upload: '12:00 & 19:30 WIB (Puncak Retensi Shorts/TikTok)',
-            alasan: 'Shorts & video pendek memerlukan frekuensi tinggi pada jam istirahat makan siang & malam.',
-            hindari: 'Diatas jam 22:00 WIB'
-          }
+    normalized.shots = normalized.shots.map((shot: any, index: number) => {
+      const shotNum = shot.shot_number || index + 1
+      const normalizedShot = { ...shot }
+
+      // Judul Shorts
+      if (typeof normalizedShot.judul === 'string') {
+        normalizedShot.judul = {
+          opsi: [normalizedShot.judul, `#Shorts ${normalizedShot.judul}`, `Viral: ${normalizedShot.judul}`],
+          best_choice: normalizedShot.judul,
+          alasan_best_choice: 'Judul hook tajam khusus YouTube Shorts.'
+        }
+      } else if (Array.isArray(normalizedShot.judul)) {
+        normalizedShot.judul = {
+          opsi: normalizedShot.judul,
+          best_choice: normalizedShot.judul[0] || `Highlight Shorts #${shotNum}`,
+          alasan_best_choice: 'Judul ringkas dan penuh rasa penasaran.'
+        }
+      } else if (!normalizedShot.judul) {
+        normalizedShot.judul = {
+          opsi: [`Highlight Shorts #${shotNum}`],
+          best_choice: `Highlight Shorts #${shotNum}`,
+          alasan_best_choice: 'Judul spesifik segmen Shorts.'
         }
       }
-      return shot
+
+      // SEO & Keywords khusus Shorts
+      if (typeof normalizedShot.seo === 'string') {
+        normalizedShot.seo = {
+          keyword_utama: ['youtube shorts', 'shorts viral', 'tips cepat'],
+          keyword_turunan: ['shorts indonesia', 'trik viral', 'klip pendek'],
+          tags: ['shorts', 'youtubeshorts', 'viralshorts', 'shortsvideo'],
+          hashtags: ['#Shorts', '#YouTubeShorts', '#ViralShorts', '#ShortsVideo'],
+          playlist_recommendation: ['Kumpulan YouTube Shorts', 'Highlight Terbaik']
+        }
+      } else if (!normalizedShot.seo) {
+        normalizedShot.seo = {
+          keyword_utama: ['youtube shorts', 'video pendek', 'highlight segmen'],
+          keyword_turunan: ['shorts viral', 'klip 60 detik', 'momen menarik'],
+          tags: ['shorts', 'youtubeshorts', 'shortsvideo', 'viral'],
+          hashtags: ['#Shorts', '#YouTubeShorts', '#Viral'],
+          playlist_recommendation: ['YouTube Shorts Series', 'Klip Ringkas']
+        }
+      } else {
+        normalizedShot.seo = {
+          keyword_utama: Array.isArray(normalizedShot.seo.keyword_utama) ? normalizedShot.seo.keyword_utama : ['youtube shorts'],
+          keyword_turunan: Array.isArray(normalizedShot.seo.keyword_turunan) ? normalizedShot.seo.keyword_turunan : ['shorts viral'],
+          tags: Array.isArray(normalizedShot.seo.tags) ? normalizedShot.seo.tags : ['shorts', 'youtubeshorts'],
+          hashtags: Array.isArray(normalizedShot.seo.hashtags) ? normalizedShot.seo.hashtags : ['#Shorts', '#YouTubeShorts'],
+          playlist_recommendation: Array.isArray(normalizedShot.seo.playlist_recommendation) ? normalizedShot.seo.playlist_recommendation : ['YouTube Shorts']
+        }
+      }
+
+      // Rekomendasi Upload khusus Shorts
+      if (typeof normalizedShot.rekomendasi_upload === 'string') {
+        normalizedShot.rekomendasi_upload = {
+          tersedia: true,
+          hari_terbaik: ['Setiap Hari'],
+          jam_upload: '12:00 & 19:30 WIB',
+          alasan: normalizedShot.rekomendasi_upload,
+          hindari: 'Diatas jam 22:00 WIB'
+        }
+      } else if (!normalizedShot.rekomendasi_upload) {
+        normalizedShot.rekomendasi_upload = {
+          tersedia: true,
+          hari_terbaik: ['Setiap Hari'],
+          jam_upload: '12:00 & 19:30 WIB (Puncak Retensi Shorts)',
+          alasan: 'YouTube Shorts memerlukan frekuensi tinggi pada jam istirahat makan siang & malam.',
+          hindari: 'Diatas jam 22:00 WIB'
+        }
+      }
+
+      return normalizedShot
     })
   }
 
