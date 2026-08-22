@@ -350,16 +350,26 @@ export async function POST(req: NextRequest) {
 
     // Extractor helper: Extract YouTube video ID & transcript automatically if URL provided
     if (url && !userMessage?.includes('TRANSKRIP MANUAL')) {
+      // Extract video ID from youtube.com/watch?v=, youtu.be/, shorts/, embed/
+      const match = url.match(/(?:v=|\/|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/)
+      const videoId = match ? match[1] : url
+
+      let transcriptItems: any[] = []
       try {
-        const transcriptItems = await YoutubeTranscript.fetchTranscript(url, { lang: 'id' }).catch(() =>
-          YoutubeTranscript.fetchTranscript(url, { lang: 'en' }).catch(() =>
-            YoutubeTranscript.fetchTranscript(url)
+        transcriptItems = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'id' }).catch(() =>
+          YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' }).catch(() =>
+            YoutubeTranscript.fetchTranscript(videoId)
           )
         )
+      } catch (e) {
+        try {
+          transcriptItems = await YoutubeTranscript.fetchTranscript(url)
+        } catch (err) { }
+      }
 
-        if (transcriptItems && transcriptItems.length > 0) {
-          const fullText = transcriptItems.map((item) => item.text).join(' ')
-          finalUserMessage = `Analisis konten YouTube berikut (Transkrip berhasil diekstrak otomatis):
+      if (transcriptItems && transcriptItems.length > 0) {
+        const fullText = transcriptItems.map((item) => item.text).join(' ')
+        finalUserMessage = `Analisis konten YouTube berikut (Transkrip berhasil diekstrak otomatis):
 
 URL: ${url}
 Transkrip Video:
@@ -372,9 +382,13 @@ ${notes ? `Catatan khusus: ${notes}` : ''}
 ${keyword ? `Kata kunci target: ${keyword}` : ''}
 
 ${channel?.analyticsData ? `\n\n${channel.analyticsData}\n\n` : ''}Hasilkan paket konten lengkap dalam format JSON.`
-        }
-      } catch (trErr) {
-        console.warn('Auto transcript extraction failed or not available for URL:', url, trErr)
+      } else {
+        return NextResponse.json(
+          {
+            error: 'Gagal mengambil transkrip otomatis dari YouTube. Video mungkin tidak memiliki subtitle/caption publik. Silakan gunakan opsi Transkrip Manual (copy-paste naskah/subtitle ke tab Transkrip Manual).'
+          },
+          { status: 400 }
+        )
       }
     }
 
