@@ -284,19 +284,22 @@ Untuk memicu rasio klik (CTR) yang maksimal, rancangan judul dan thumbnail harus
 3. **Penyelarasan Visual Hook**:
    * Deskripsi pada \`konsep\` dan \`prompt_ai_image\` harus merekomendasikan ekspresi subjek (misal: mikrosekspresi syok, kebingungan, ketakutan, atau senyum misterius) atau objek kontras yang berkorelasi langsung dengan emosi utama judul. Jangan gunakan visual latar belakang generik yang tidak menceritakan sesuatu.
 
-## 🎨 STRATEGI DESAIN THUMBNAIL HIGH-CTR (Pola Visual Sukses)
+## 🎨 STRATEGI DESAIN THUMBNAIL HIGH-CTR (Pola Visual Sukses & Kalibrasi ECC)
 
 Rekomendasi konsep visual dan teks thumbnail wajib merujuk pada pola desain berkinerja tinggi (High-CTR) berikut:
 
-1. **Tata Letak Subjek & Pencahayaan Edge-Glow**:
+1. **Aturan Khusus Nalar Senyap (Optimasi CTR Terendah ~3.2%):**
+   * Wajib gunakan **Teks Elipsis / Jeda Perasaan** (contoh: *"Sudah Lelah…?"*, *"Ternyata Selama Ini…?"*). Pola judul bertanya + elipsis terbukti menduduki peringkat #1 dalam pengujian retensi CTR.
+   * Visual wajib menggunakan **Kontras Tinggi Extreme** (Background Gelap Total/Abyssal + Aksen Kuning Emas/Cyan Neon) dan simbol visual Kintsugi (retakan bersinar emas) atau mata air tenang.
+2. **Tata Letak Subjek & Pencahayaan Edge-Glow**:
    * **Rule of Thirds**: Tempatkan subjek utama (wajah/setengah badan pembicara/kreator) secara dominan di salah satu sisi (kiri atau kanan, disesuaikan dengan DNA channel), menghadap ke arah teks.
    * **Edge Glow / Backlight**: Deskripsikan adanya cahaya tipis bersinar melingkari sisi tubuh subjek (warna kuning/emas hangat atau biru/cyan sejuk) untuk memisahkannya secara tajam dari latar belakang gelap.
    * **Ekspresi Mikro Wajah (Micro-Expressions)**: Ekspresi harus sangat kuat dan mencerminkan emosi hook (misal: mata terbelalak heran, dahi mengernyit bingung, senyum misterius setengah terpaksa, atau ekspresi merenung mendalam dengan tatapan kosong). Ini sangat menentukan retensi klik pertama.
-2. **Tipografi Berkontras Tinggi & Hierarki Warna**:
+3. **Tipografi Berkontras Tinggi & Hierarki Warna**:
    * Teks harus besar, tebal (bold), sans-serif bersih, dan diletakkan di sisi berlawanan dari subjek.
    * **Dual Color Coding**: Gunakan kombinasi maksimal 2 warna kontras (misal: Putih + Kuning Emas, atau Putih + Hijau Neon). Kata kunci utama yang paling memicu klik harus diperbesar dan diberi warna penekanan (Kuning/Hijau).
    * **Kontainer Berkontras Tinggi**: Untuk teks pendukung atau CTA tambahan, letakkan di atas kontainer berikhtisar tinggi seperti efek sapuan kuas putih (*white brush stroke banner*) atau kotak badge solid dengan warna kontras.
-3. **Latar Belakang Gelap dengan Pencahayaan Dramatis**:
+4. **Latar Belakang Gelap dengan Pencahayaan Dramatis**:
    * Latar belakang harus gelap, moody, dan bertekstur (misalnya: abu-abu gelap, abu beton, biru tua, atau hitam kecokelatan) untuk membuat teks dan subjek menonjol secara instan.
    * Gunakan **satu sumber cahaya dramatis** di latar belakang (misalnya: berkas cahaya jendela/god rays yang menembus bayangan, pancaran lampu spotlight di belakang subjek, lentera bercahaya hangat, atau bulan sabit).
    * Tempatkan **objek simbolik berdimensi kecil** di sudut kosong yang relevan dengan topik untuk memperkaya cerita visual (contoh: tumpukan batu Zen untuk tema ketenangan/stoikisme, lentera tradisional untuk tema religi/puasa).
@@ -587,7 +590,7 @@ Aplikasi akan merender JSON ini ke dalam urutan tampilan berikut. \`ringkasan\`,
 Ingat: output akhir Anda **hanya** objek JSON tersebut, mulai dari \`{\` dan diakhiri \`}\`, tanpa teks lain.`
 
 export const CHANNELS_DNA: Record<string, string> = {
-    'suara-filsuf': `# MASTER PROMPT — SUARA FILSUF
+  'suara-filsuf': `# MASTER PROMPT — SUARA FILSUF
 > Disarikan dari Channel DNA (data analytics 31 Mar–29 Jun 2026, 357 video)
 > Gunakan ini sebagai system prompt / instruksi tetap untuk AI yang membantu produksi konten channel ini.
 
@@ -844,7 +847,7 @@ Saat diminta membuat judul, hook, atau naskah baru:
 2. Untuk judul → gunakan salah satu dari 3 template di atas, cek batas karakter.
 3. Untuk opening 60 detik → minta transkrip video sumber dulu jika belum ada; jangan pernah mengarang.
 4. Selalu cek output terhadap daftar Larangan Mutlak sebelum menyajikan ke pengguna.`,
-    'nalar-senyap': `# MASTER PROMPT — NALAR SENYAP
+  'nalar-senyap': `# MASTER PROMPT — NALAR SENYAP
 > Disarikan dari Channel DNA + data analytics (179 video dengan data, periode terbaru).
 > ⚠️ Bagian "Insight dari Data" ditandai sesuai kekuatan buktinya — beberapa sudah cukup solid, beberapa masih sample kecil dan perlu validasi lanjut.
 
@@ -1079,7 +1082,7 @@ Untuk field \`playlist_rekomendasi\`, **HANYA PILIH DARI 7 PLAYLIST RESMI NALAR 
 2. Prioritaskan ide untuk video panjang dibanding Shorts.
 3. Jangan overclaim dari insight bersample kecil — anggap sebagai hipotesis kerja, bukan aturan final.
 4. Cek setiap output terhadap daftar Larangan Mutlak sebelum disajikan.`,
-    'tutur-kyai': `# CHANNEL DNA: TUTUR KYAI
+  'tutur-kyai': `# CHANNEL DNA: TUTUR KYAI
 
 ## Karakter Channel
 
