@@ -65,12 +65,39 @@ export default function ChannelPicker() {
         </h4>
         <div className="space-y-3">
           <div>
-            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 block">
-              Data Analytics Channel (Markdown)
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
+                Data Analytics Channel (Paste Text / Upload CSV Retensi)
+              </label>
+              <label className="text-[10px] font-bold text-blue-600 dark:text-blue-400 cursor-pointer hover:underline flex items-center gap-1">
+                📁 Upload CSV YouTube Studio
+                <input
+                  type="file"
+                  accept=".csv,.txt"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      const reader = new FileReader()
+                      reader.onload = (evt) => {
+                        const content = evt.target?.result as string
+                        if (content) {
+                          const updatedChannels = channels.map(c =>
+                            c.id === activeChannel.id ? { ...c, analyticsData: content } : c
+                          )
+                          useAppStore.setState({ channels: updatedChannels })
+                          setActiveChannel({ ...activeChannel, analyticsData: content })
+                        }
+                      }
+                      reader.readAsText(file)
+                    }
+                  }}
+                />
+              </label>
+            </div>
             <textarea
               className="w-full text-xs p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none min-h-[120px] font-mono text-slate-600 dark:text-slate-400"
-              placeholder="Paste data performa/analytics channel di sini (seperti rata-rata CTR, retensi, pola views). Data ini akan otomatis disisipkan ke AI setiap kali Anda menganalisis video untuk channel ini."
+              placeholder="Paste naskah/ringkasan data performa/analytics channel (CTR, retensi AVD, durasi tonton, sumber trafik) atau gunakan tombol Upload CSV dari YouTube Studio."
               value={activeChannel.analyticsData || ''}
               onChange={(e) => {
                 const updatedChannels = channels.map(c =>
