@@ -406,11 +406,40 @@ export async function POST(req: NextRequest) {
 
     let finalUserMessage = userMessage
 
-    // Extractor helper: Extract YouTube video ID & transcript automatically if URL provided
+    // Extractor helper: Extract YouTube video ID, metadata & transcript automatically if URL provided
     if (url && !userMessage?.includes('TRANSKRIP MANUAL')) {
       // Extract video ID from youtube.com/watch?v=, youtu.be/, shorts/, embed/
       const match = url.match(/(?:v=|\/|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/)
       const videoId = match ? match[1] : url
+
+      let videoMetadataStr = ''
+      // Try to fetch YouTube Data API v3 metadata if apiKey available (Google API Key or process env)
+      const ytApiKey = googleApiKey || process.env.YOUTUBE_DATA_API_KEY
+      if (ytApiKey && match) {
+        try {
+          const apiResp = await fetch(
+            `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoId}&key=${ytApiKey}`
+          )
+          if (apiResp.ok) {
+            const apiData = await apiResp.json()
+            const item = apiData.items?.[0]
+            if (item) {
+              const snippet = item.snippet || {}
+              const stats = item.statistics || {}
+              const details = item.contentDetails || {}
+              videoMetadataStr = `
+METADATA VIDEO YOUTUBE (Data API v3):
+- Judul Video Sumber: ${snippet.title || '-'}
+- Channel Publisher: ${snippet.channelTitle || '-'}
+- Published At: ${snippet.publishedAt || '-'}
+- Tags Asli Video: ${Array.isArray(snippet.tags) ? snippet.tags.join(', ') : '-'}
+- Durasi Asli: ${details.duration || '-'}
+- Statistik: ${stats.viewCount || 0} Views, ${stats.likeCount || 0} Likes, ${stats.commentCount || 0} Komentar
+`
+            }
+          }
+        } catch (err) { }
+      }
 
       let transcriptItems: any[] = []
       try {
@@ -427,9 +456,10 @@ export async function POST(req: NextRequest) {
 
       if (transcriptItems && transcriptItems.length > 0) {
         const fullText = transcriptItems.map((item) => item.text).join(' ')
-        finalUserMessage = `Analisis konten YouTube berikut (Transkrip berhasil diekstrak otomatis):
+        finalUserMessage = `Analisis konten YouTube berikut:
 
 URL: ${url}
+${videoMetadataStr}
 Transkrip Video:
 ---
 ${fullText}
@@ -439,7 +469,7 @@ Platform: YOUTUBE
 ${notes ? `Catatan khusus: ${notes}` : ''}
 ${keyword ? `Kata kunci target: ${keyword}` : ''}
 
-${channel?.analyticsData ? `\n\n${channel.analyticsData}\n\n` : ''}Hasilkan paket konten lengkap dalam format JSON.`
+${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData}\n\n` : ''}Hasilkan paket konten lengkap dalam format JSON.`
       } else {
         return NextResponse.json(
           {
