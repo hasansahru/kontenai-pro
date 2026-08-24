@@ -229,6 +229,7 @@ interface AppState {
   analyses: AnalysisResult[]
   addAnalysis: (a: AnalysisResult) => void
   updateAnalysis: (id: string, update: Partial<AnalysisResult>) => void
+  deleteAnalysis: (id: string) => void
   clearHistory: () => void
 
   // Form state
@@ -287,6 +288,10 @@ export const useAppStore = create<AppState>()(
       updateAnalysis: (id, update) =>
         set((s) => ({
           analyses: s.analyses.map((a) => (a.id === id ? { ...a, ...update } : a)),
+        })),
+      deleteAnalysis: (id) =>
+        set((s) => ({
+          analyses: s.analyses.filter((a) => a.id !== id),
         })),
       clearHistory: () => set({ analyses: [] }),
 

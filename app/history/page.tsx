@@ -8,6 +8,7 @@ import Link from 'next/link'
 
 export default function HistoryPage() {
   const analyses = useAppStore((s) => s.analyses)
+  const deleteAnalysis = useAppStore((s) => s.deleteAnalysis)
   const clearHistory = useAppStore((s) => s.clearHistory)
 
   return (
@@ -93,8 +94,8 @@ export default function HistoryPage() {
                       </div>
                     </div>
 
-                    {/* Status */}
-                    <div className="shrink-0">
+                    {/* Status & Actions */}
+                    <div className="shrink-0 flex items-center gap-3">
                       {analysis.status === 'success' && (
                         <div className="flex items-center gap-1 text-emerald-500 text-[10px] font-semibold">
                           <CheckCircle className="size-4" />
@@ -113,6 +114,18 @@ export default function HistoryPage() {
                           Proses...
                         </div>
                       )}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          deleteAnalysis(analysis.id)
+                        }}
+                        title="Hapus analisis ini"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
                     </div>
                   </div>
 
