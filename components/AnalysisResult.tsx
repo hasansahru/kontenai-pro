@@ -6,7 +6,7 @@ import {
   Copy, Check, Sparkles, Target, Scissors
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { AnalysisResult } from '@/lib/stores/useAppStore'
+import { useAppStore, type AnalysisResult } from '@/lib/stores/useAppStore'
 
 type Tab = 'summary' | 'strategy' | 'segments' | 'titles' | 'thumbnail' | 'seo' | 'editing' | 'performance'
 
@@ -34,9 +34,35 @@ function CopyButton({ text }: { text?: string }) {
       onClick={handleCopy}
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
     >
-      {copied ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
-      {copied ? 'Tersalin!' : 'Salin'}
+      {copied ? <Check className="size-3 text-green-500" /> : <Copy className="size-3" />}
+      {copied ? 'Tersalin' : 'Salin'}
     </button>
+  )
+}
+
+function SectionTitle({ icon: Icon, title, badge }: { icon: React.ElementType; title: string; badge?: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2 mb-3">
+      <div className="flex items-center gap-2">
+        <div className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+          <Icon className="size-4" />
+        </div>
+        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">{title}</h4>
+      </div>
+      {badge && (
+        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
+          {badge}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function SectionBlock({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn("p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm space-y-3", className)}>
+      {children}
+    </div>
   )
 }
 
@@ -63,6 +89,11 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
 export default function AnalysisResultPanel({ analysis }: { analysis: AnalysisResult }) {
   const [activeTab, setActiveTab] = useState<Tab>('summary')
   const [activeShot, setActiveShot] = useState<number>(0)
+  const { aiProvider, selectedModel, googleModel } = useAppStore()
+
+  const activeModelName = aiProvider === 'google'
+    ? (googleModel || 'Google Gemini')
+    : (selectedModel || '9Router AI')
 
   const { result, platform, status, error } = analysis
   const isYouTube = platform === 'youtube'
@@ -75,9 +106,9 @@ export default function AnalysisResultPanel({ analysis }: { analysis: AnalysisRe
           <div className={cn('w-14 h-14 rounded-full border-4 border-t-transparent animate-spin', isYouTube ? 'border-red-500' : 'border-blue-500')} />
           <Sparkles className={cn('absolute inset-0 m-auto size-5', isYouTube ? 'text-red-500' : 'text-blue-500')} />
         </div>
-        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 text-center">
-          Combo-Maut sedang meracik strategi konten mendalam...<br />
-          <span className="text-[10px] font-normal text-slate-400">Proses analisis cerdas sedang berjalan</span>
+        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 text-center">
+          <span className="font-bold text-red-600 dark:text-red-400">{activeModelName}</span> sedang meracik strategi konten mendalam...<br />
+          <span className="text-[11px] font-normal text-slate-400">Proses analisis cerdas sedang berjalan</span>
         </p>
       </div>
     )

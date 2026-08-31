@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { YoutubeTranscript } from 'youtube-transcript'
 
+export const maxDuration = 60
+export const dynamic = 'force-dynamic'
+
 const DEFAULT_9ROUTER_KEY = 'sk-359ef6f88ed2d372-wi3lmm-fce3c847'
 const DEFAULT_9ROUTER_ENDPOINT = 'https://ai.sahru.my.id/v1/chat/completions'
 
@@ -550,7 +553,7 @@ ${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData
               { role: 'user', content: finalUserMessage },
             ],
             temperature: 0.7,
-            max_tokens: 4096,
+            max_tokens: 8192,
           }),
         })
 
