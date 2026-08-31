@@ -83,6 +83,7 @@ export default function HomePage() {
   const analyses = useAppStore((s) => s.analyses)
 
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingStep, setLoadingStep] = useState('Menghubungi Backend...')
   const [currentAnalysisId, setCurrentAnalysisId] = useState<string | null>(null)
   const [inputMode, setInputMode] = useState<'url' | 'manual'>('url')
   const [manualText, setManualText] = useState('')
@@ -111,6 +112,25 @@ export default function HomePage() {
   const handleAnalyze = async () => {
     if (!canAnalyze) return
     setIsLoading(true)
+
+    const activeModelDisplayName = aiProvider === 'google' ? (googleModel || 'Google Gemini') : (selectedModel || '9Router AI')
+    setLoadingStep('Menghubungi Backend...')
+
+    const steps = [
+      'Mengambil transkrip & metadata video...',
+      'Menyusun system prompt DNA Channel...',
+      `Mengirim request ke ${activeModelDisplayName}...`,
+      'Mem-parsing hasil JSON dari AI...',
+      'Memeriksa kesesuaian target durasi...'
+    ]
+
+    let currentStep = 0
+    const interval = setInterval(() => {
+      if (currentStep < steps.length) {
+        setLoadingStep(steps[currentStep])
+        currentStep++
+      }
+    }, 4500)
 
     const inputRef = inputMode === 'url' ? url.trim() : `[TRANSKRIP MANUAL]\n\n${manualText.trim()}`
 
@@ -191,7 +211,9 @@ ${activeChannel.analyticsData ? `\n\n${activeChannel.analyticsData}\n\n` : ''}Be
     } catch (err: any) {
       updateAnalysis(id, { status: 'error', error: err.message || 'Koneksi ke AI gagal. Pastikan 9Router aktif.' })
     } finally {
+      clearInterval(interval)
       setIsLoading(false)
+      setLoadingStep('')
     }
   }
 
@@ -440,6 +462,19 @@ ${activeChannel.analyticsData ? `\n\n${activeChannel.analyticsData}\n\n` : ''}Be
         {latestAnalysis && (
           <div ref={resultRef}>
             <AnalysisResult analysis={latestAnalysis} />
+          </div>
+        )}
+
+        {/* Studio Loading Overlay (Modal Mirip SuaraAI) */}
+        {isLoading && (
+          <div className="fixed inset-0 z-50 bg-slate-900/20 dark:bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-card border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-2xl p-7 max-w-xs w-full flex flex-col items-center text-center space-y-3 animate-in fade-in zoom-in-95 duration-200">
+              <Loader2 className="size-7 text-blue-500 animate-spin" />
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Menyusun Strategy Konten</h3>
+              <p className="text-xs font-mono text-slate-500 dark:text-slate-400">
+                {loadingStep || 'Memproses transkrip & DNA channel...'}
+              </p>
+            </div>
           </div>
         )}
       </div>

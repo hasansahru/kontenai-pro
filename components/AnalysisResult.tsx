@@ -100,18 +100,7 @@ export default function AnalysisResultPanel({ analysis }: { analysis: AnalysisRe
   const accentColor = isYouTube ? 'text-red-600 dark:text-red-400 border-red-500' : 'text-blue-500 border-blue-500'
 
   if (status === 'loading') {
-    return (
-      <div className="bg-white dark:bg-card rounded-3xl border border-slate-200/60 dark:border-border p-10 flex flex-col items-center justify-center gap-4 min-h-[300px]">
-        <div className="relative">
-          <div className={cn('w-14 h-14 rounded-full border-4 border-t-transparent animate-spin', isYouTube ? 'border-red-500' : 'border-blue-500')} />
-          <Sparkles className={cn('absolute inset-0 m-auto size-5', isYouTube ? 'text-red-500' : 'text-blue-500')} />
-        </div>
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 text-center">
-          <span className="font-bold text-red-600 dark:text-red-400">{activeModelName}</span> sedang meracik strategi konten mendalam...<br />
-          <span className="text-[11px] font-normal text-slate-400">Proses analisis cerdas sedang berjalan</span>
-        </p>
-      </div>
-    )
+    return null
   }
 
   if (status === 'error') {
