@@ -404,7 +404,7 @@ export async function POST(req: NextRequest) {
     } = body
 
     if (!url && !userMessage?.includes('TRANSKRIP MANUAL')) {
-      return NextResponse.json({ error: 'URL atau Transkrip wajib diisi' }, { status: 400 })
+      return NextResponse.json({ error: 'URL atau Transkrip wajib diisi' }, { status: 200 })
     }
 
     let finalUserMessage = userMessage
@@ -476,9 +476,9 @@ ${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData
       } else {
         return NextResponse.json(
           {
-            error: 'Gagal mengambil transkrip otomatis dari YouTube. Video mungkin tidak memiliki subtitle/caption publik. Silakan gunakan opsi Transkrip Manual (copy-paste naskah/subtitle ke tab Transkrip Manual).'
+            error: 'Gagal mengambil transkrip otomatis dari URL YouTube ini (mungkin subtitle tidak tersedia/diprivat). Silakan gunakan tab "Transkrip Manual" dengan menyalin naskah/teks video secara langsung.'
           },
-          { status: 400 }
+          { status: 200 }
         )
       }
     }
@@ -488,10 +488,11 @@ ${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData
     // ----------------------------------------------------
     if (aiProvider === 'google') {
       if (!googleApiKey) {
-        return NextResponse.json({ error: 'API Key Google Studio belum diisi di Pengaturan' }, { status: 400 })
+        return NextResponse.json({ error: 'API Key Google Studio belum diisi di Pengaturan' }, { status: 200 })
       }
 
-      const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${googleModel}:generateContent?key=${googleApiKey}`
+      const effectiveGoogleModel = googleModel === 'gemini-2.5-flash' ? 'gemini-3.6-flash' : (googleModel || 'gemini-3.6-flash')
+      const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${effectiveGoogleModel}:generateContent?key=${googleApiKey}`
       const resp = await fetch(geminiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -507,7 +508,7 @@ ${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}))
-        return NextResponse.json({ error: err.error?.message || 'Google AI Studio Error' }, { status: resp.status })
+        return NextResponse.json({ error: err.error?.message || 'Google AI Studio Error' }, { status: 200 })
       }
 
       const data = await resp.json()
@@ -516,7 +517,7 @@ ${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData
         const result = extractAndParseJson(contentStr)
         return NextResponse.json({ result })
       }
-      return NextResponse.json({ error: 'Format JSON dari Google Studio tidak ditemukan' }, { status: 500 })
+      return NextResponse.json({ error: 'Format JSON dari Google Studio tidak ditemukan' }, { status: 200 })
     }
 
     // ----------------------------------------------------
@@ -528,8 +529,8 @@ ${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData
     // List of fallback models in priority order
     const modelCandidates = [
       targetModel,
-      targetModel !== 'Combo-Maut' ? 'Combo-Maut' : null,
-      'ComToken',
+      targetModel !== 'ComToken' ? 'ComToken' : null,
+      'Google',
       'inferx/Qwen3.8-27B-FP8',
     ].filter(Boolean) as string[]
 
@@ -545,7 +546,7 @@ ${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData
         const response = await fetch(DEFAULT_9ROUTER_ENDPOINT, {
           method: 'POST',
           headers,
-          signal: AbortSignal.timeout(90000),
+          signal: AbortSignal.timeout(120000),
           body: JSON.stringify({
             model: currentModel,
             messages: [
@@ -598,11 +599,11 @@ ${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData
     }
 
     return NextResponse.json(
-      { error: `Semua kandidat model 9Router (${modelCandidates.join(', ')}) gagal: ${lastError}` },
-      { status: 500 }
+      { error: `Semua model AI 9Router (${modelCandidates.join(', ')}) gagal merespons: ${lastError}` },
+      { status: 200 }
     )
   } catch (err: any) {
     console.error('Analyze error:', err)
-    return NextResponse.json({ error: err.message || 'Terjadi kesalahan server internal' }, { status: 500 })
+    return NextResponse.json({ error: err.message || 'Terjadi kesalahan server internal' }, { status: 200 })
   }
 }

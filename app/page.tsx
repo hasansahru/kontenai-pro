@@ -201,7 +201,13 @@ ${activeChannel.analyticsData ? `\n\n${activeChannel.analyticsData}\n\n` : ''}Be
         }),
       })
 
-      const data = await response.json()
+      const responseText = await response.text()
+      let data: any = {}
+      try {
+        data = JSON.parse(responseText)
+      } catch (jsonErr) {
+        throw new Error('Terjadi kendala pada format respon server AI. Mohon coba sesaat lagi atau gunakan tab Transkrip Manual.')
+      }
 
       if (data.result) {
         updateAnalysis(id, { status: 'success', result: data.result })
