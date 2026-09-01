@@ -546,7 +546,7 @@ ${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData
         const response = await fetch(DEFAULT_9ROUTER_ENDPOINT, {
           method: 'POST',
           headers,
-          signal: AbortSignal.timeout(120000),
+          signal: AbortSignal.timeout(45000),
           body: JSON.stringify({
             model: currentModel,
             messages: [

@@ -183,7 +183,7 @@ ${activeChannel.analyticsData ? `\n\n${activeChannel.analyticsData}\n\n` : ''}Be
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          url: url.trim(),
+          url: inputMode === 'url' ? url.trim() : '',
           platform,
           channel: activeChannel,
           format: outputFormat,
@@ -206,7 +206,9 @@ ${activeChannel.analyticsData ? `\n\n${activeChannel.analyticsData}\n\n` : ''}Be
       try {
         data = JSON.parse(responseText)
       } catch (jsonErr) {
-        throw new Error('Terjadi kendala pada format respon server AI. Mohon coba sesaat lagi atau gunakan tab Transkrip Manual.')
+        const titleMatch = responseText.match(/<title>([^<]+)<\/title>/i)
+        const errorSummary = titleMatch ? titleMatch[1] : responseText.slice(0, 100)
+        throw new Error(`Server Hosting Timeout (${errorSummary}). Silakan coba ganti ke model 'ComToken' di Pengaturan atau gunakan tab 'Transkrip Manual'.`)
       }
 
       if (data.result) {
