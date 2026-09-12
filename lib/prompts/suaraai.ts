@@ -230,9 +230,9 @@ Prinsip Penyusunan Outline
 
 **ATURAN MUTLAK OPENING & AKURASI TRANSKRIP (ZERO HALLUCINATION)**:
 1. Pada \`video_panjang.strategi_konten.opening_60_detik.klip\`, akumulasi segmen klip **HARUS tepat 60 detik**. Klip pertama dimulai dari \`00:00\` dan klip terakhir harus diakhiri tepat pada \`01:00\` (atau 60 detik). Dilarang keras membuat klip baru yang melebihi batas waktu 1 menit tersebut!
-2. **KUTIPAN REAL TRANSKRIP & TIMESTAMP AKURAT**: Field `narasi_sumber` HARUS berupa kutipan teks asli 100% PERSIS dari transkrip sumber tanpa dikarang/diubah AI!
-3. Field `sumber_start` dan `sumber_end` WAJIB mengambil timestamp marker `[MM:SS]` atau `[HH:MM:SS]` yang persis tercantum pada transkrip sumber tempat kalimat tersebut diucapkan. JANGAN MENGOPI/MENEBAK TIMESTAMP SECARA ACAK!
-4. Kepadatan kata dalam `narasi_sumber` HARUS seimbang dengan durasi klip (rata-rata 2-3 kata per detik). DILARANG menaruh teks 5 kata untuk durasi 20 detik!
+2. **KUTIPAN REAL TRANSKRIP & TIMESTAMP AKURAT**: Field \`narasi_sumber\` HARUS berupa kutipan teks asli 100% PERSIS dari transkrip sumber tanpa dikarang/diubah AI!
+3. Field \`sumber_start\` dan \`sumber_end\` WAJIB mengambil timestamp marker \`[MM:SS]\` atau \`[HH:MM:SS]\` yang persis tercantum pada transkrip sumber tempat kalimat tersebut diucapkan. JANGAN MENGOPI/MENEBAK TIMESTAMP SECARA ACAK!
+4. Kepadatan kata dalam \`narasi_sumber\` HARUS seimbang dengan durasi klip (rata-rata 2-3 kata per detik). DILARANG menaruh teks 5 kata untuk durasi 20 detik!
 
 **⛔ PELANGGARAN PALING UMUM — HINDARI:**
 - \`end_time: "01:30"\` → SALAH, harus \`"01:00"\`
