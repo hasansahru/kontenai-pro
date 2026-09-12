@@ -10,9 +10,9 @@ const DEFAULT_9ROUTER_ENDPOINT = 'https://ai.sahru.my.id/v1/chat/completions'
 /**
  * Ultra-Resilient JSON extraction, auto-repair, and normalization
  */
-function extractAndParseJson(rawContent: string): any {
+function extractAndParseJson(rawContent: string, formatRequested?: string, shotCountRequested?: number): any {
   if (!rawContent || typeof rawContent !== 'string') {
-    return normalizeAnalysisResult({})
+    return normalizeAnalysisResult({}, formatRequested, shotCountRequested)
   }
 
   let content = rawContent.trim()
@@ -23,7 +23,7 @@ function extractAndParseJson(rawContent: string): any {
   // 2. Direct parse
   try {
     const parsed = JSON.parse(content)
-    return normalizeAnalysisResult(parsed)
+    return normalizeAnalysisResult(parsed, formatRequested, shotCountRequested)
   } catch (e) { }
 
   // 3. Sanitize and parse unescaped newlines/tabs inside quotes
@@ -31,7 +31,7 @@ function extractAndParseJson(rawContent: string): any {
     const sanitized = content
       .replace(/[\u0000-\u0009\u000B\u000C\u000E-\u001F]+/g, '')
     const parsed = JSON.parse(sanitized)
-    return normalizeAnalysisResult(parsed)
+    return normalizeAnalysisResult(parsed, formatRequested, shotCountRequested)
   } catch (e) { }
 
   // 4. Find outermost JSON object
@@ -41,12 +41,12 @@ function extractAndParseJson(rawContent: string): any {
     const jsonSubstring = content.substring(firstBrace, lastBrace + 1)
     try {
       const parsed = JSON.parse(jsonSubstring)
-      return normalizeAnalysisResult(parsed)
+      return normalizeAnalysisResult(parsed, formatRequested, shotCountRequested)
     } catch (err) {
       try {
         const cleaned = jsonSubstring.replace(/[\u0000-\u001F]+/g, ' ')
         const parsed = JSON.parse(cleaned)
-        return normalizeAnalysisResult(parsed)
+        return normalizeAnalysisResult(parsed, formatRequested, shotCountRequested)
       } catch (err2) { }
     }
   }
@@ -65,7 +65,7 @@ function extractAndParseJson(rawContent: string): any {
       }
     }
     if (accumulated) {
-      return extractAndParseJson(accumulated)
+      return extractAndParseJson(accumulated, formatRequested, shotCountRequested)
     }
   }
 
@@ -158,7 +158,7 @@ function extractAndParseJson(rawContent: string): any {
  * Universal Data Normalizer: ensures every field required by the UI is present and rich,
  * adapting seamlessly whether the LLM returns strings, arrays, or nested objects.
  */
-function normalizeAnalysisResult(raw: any): any {
+function normalizeAnalysisResult(raw: any, formatRequested?: string, shotCountRequested?: number): any {
   if (!raw || typeof raw !== 'object') {
     return {
       ringkasan: {
@@ -188,6 +188,22 @@ function normalizeAnalysisResult(raw: any): any {
       ide_utama: 'Strategi konten viral dan berretensi tinggi.',
       struktur_video: 'Hook -> Isi -> CTA',
       durasi_estimasi: '10:00'
+    }
+  }
+
+  // Clean up nested stringified JSON in ringkasan.ide_utama if present
+  if (normalized.ringkasan && typeof normalized.ringkasan === 'object') {
+    if (typeof normalized.ringkasan.ide_utama === 'object' && normalized.ringkasan.ide_utama !== null) {
+      const iu = normalized.ringkasan.ide_utama
+      normalized.ringkasan.ide_utama = iu.ideutama || iu.ide_utama || iu.ringkasan || iu.judulvideosumber || Object.values(iu)[0] || 'Analisis ide utama'
+    } else if (typeof normalized.ringkasan.ide_utama === 'string' && normalized.ringkasan.ide_utama.trim().startsWith('{')) {
+      try {
+        const parsedIde = JSON.parse(normalized.ringkasan.ide_utama)
+        if (parsedIde.ringkasan?.ideutama) normalized.ringkasan.ide_utama = parsedIde.ringkasan.ideutama
+        else if (parsedIde.ringkasan?.ide_utama) normalized.ringkasan.ide_utama = parsedIde.ringkasan.ide_utama
+        else if (parsedIde.ideutama) normalized.ringkasan.ide_utama = parsedIde.ideutama
+        else if (parsedIde.ide_utama) normalized.ringkasan.ide_utama = parsedIde.ide_utama
+      } catch (e) {}
     }
   }
 
@@ -402,6 +418,58 @@ function normalizeAnalysisResult(raw: any): any {
     normalized.video_panjang = vp
   }
 
+  // 5. Fallback logic: If requested format is Shorts but LLM put data inside video_panjang instead of shots array, convert or generate shots array
+  const isShortsRequested = formatRequested === 'shorts'
+  const isLongRequested = formatRequested === 'long'
+
+  if (isShortsRequested && (!Array.isArray(normalized.shots) || normalized.shots.length === 0)) {
+    // LLM returned video_panjang instead of shots for Shorts mode.
+    // Build shots array from video_panjang structure or fallback default to fulfill user request.
+    const count = shotCountRequested || 3
+    const vp = normalized.video_panjang || {}
+    const outline = vp.strategi_konten?.outline || []
+
+    normalized.shots = Array.from({ length: count }, (_, idx) => {
+      const babak = outline[idx] || outline[0] || {}
+      return {
+        shot_number: idx + 1,
+        segmen: {
+          start_time: babak.start_estimate || `0${idx}:00`,
+          end_time: babak.end_estimate || `0${idx + 1}:00`,
+          durasi: '30-60s',
+          alasan: babak.isi || 'Momen penting dari transkrip video sumber.'
+        },
+        strategi_konten: {
+          big_idea: vp.strategi_konten?.big_idea || 'Ide utama segmen Shorts.',
+          unique_angle: vp.strategi_konten?.unique_angle || 'Sudut pandang unik segmen.',
+          hook_baru: vp.strategi_konten?.hook_baru || 'Hook penarik perhatian.',
+          alternatif_hook: vp.strategi_konten?.alternatif_hook || [],
+          cta: vp.strategi_konten?.cta || 'Like dan subscribe untuk klip selanjutnya!'
+        },
+        judul: vp.judul || {
+          opsi: [`Shorts #${idx + 1}: Highlight Utama`],
+          best_choice: `Shorts #${idx + 1}: Highlight Utama`,
+          alasan_best_choice: 'Judul spesifik segmen Shorts.'
+        },
+        thumbnail: vp.thumbnail || {
+          konsep: 'Visual Shorts High Impact',
+          teks_thumbnail: 'TONTON INI',
+          prompt_ai_image: 'Dynamic vertical portrait 9:16'
+        },
+        deskripsi_youtube: vp.deskripsi_youtube || 'Klip Shorts pilihan.',
+        seo: vp.seo || {
+          keyword_utama: ['youtube shorts'],
+          tags: ['shorts'],
+          hashtags: ['#Shorts']
+        }
+      }
+    })
+    delete normalized.video_panjang
+  } else if (isLongRequested) {
+    // If long video requested, remove shots array to guarantee UI displays Video Panjang format
+    delete normalized.shots
+  }
+
   // Normalize shots Array specifically for YouTube Shorts data isolation
   if (Array.isArray(normalized.shots)) {
     normalized.shots = normalized.shots.map((shot: any, index: number) => {
@@ -558,21 +626,32 @@ METADATA VIDEO YOUTUBE (Data API v3):
       }
 
       if (transcriptItems && transcriptItems.length > 0) {
-        const fullText = transcriptItems.map((item) => item.text).join(' ')
+        // Format transcript items with exact timestamps [HH:MM:SS] or [MM:SS]
+        const formattedTranscript = transcriptItems.map((item) => {
+          const totalSeconds = Math.floor((item.offset || 0) / 1000)
+          const mins = Math.floor(totalSeconds / 60)
+          const secs = totalSeconds % 60
+          const hrs = Math.floor(mins / 60)
+          const formatTime = hrs > 0 
+            ? `${hrs.toString().padStart(2, '0')}:${(mins % 60).toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+            : `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+          return `[${formatTime}] ${item.text}`
+        }).join('\n')
+
         finalUserMessage = `Analisis konten YouTube berikut:
 
 URL: ${url}
 ${videoMetadataStr}
-Transkrip Video:
+Transkrip Video (LENGKAP DENGAN TIMESTAMP ASLI):
 ---
-${fullText}
+${formattedTranscript}
 ---
 
 Platform: YOUTUBE
 ${notes ? `Catatan khusus: ${notes}` : ''}
 ${keyword ? `Kata kunci target: ${keyword}` : ''}
 
-${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData}\n\n` : ''}Hasilkan paket konten lengkap dalam format JSON.`
+${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData}\n\n` : ''}Hasilkan paket konten lengkap dalam format JSON. WAJIB gunakan timestamp [HH:MM:SS] atau [MM:SS] persis seperti yang tertera di transkrip untuk field sumber_start dan sumber_end.`
       } else {
         return NextResponse.json(
           {
@@ -614,7 +693,7 @@ ${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData
       const data = await resp.json()
       const contentStr = data.candidates?.[0]?.content?.parts?.[0]?.text
       if (contentStr) {
-        const result = extractAndParseJson(contentStr)
+        const result = extractAndParseJson(contentStr, format, shots)
         return NextResponse.json({ result })
       }
       return NextResponse.json({ error: 'Format JSON dari Google Studio tidak ditemukan' }, { status: 200 })
@@ -690,7 +769,7 @@ ${channel?.analyticsData ? `\n\nDATA ANALYTICS CHANNEL:\n${channel.analyticsData
         }
 
         if (content) {
-          const result = extractAndParseJson(content)
+          const result = extractAndParseJson(content, format, shots)
           return NextResponse.json({ result, modelUsed: currentModel })
         }
       } catch (err: any) {
